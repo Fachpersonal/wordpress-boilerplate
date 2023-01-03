@@ -23,32 +23,20 @@ get_url_path () {
 }
 
 #######################################
-# Set WordPress user password or create
-# one if it does not exist.
+# Create WordPress developer account
+# user_login 'dev' user_pass '123'
 #######################################
-set_wordpress_admin_user () {
-	user_exists=$(
+create_wordpress_admin_user () {
 	mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s <<-EOF
-	SELECT COUNT(1) FROM ${WORDPRESS_TABLE_PREFIX}users WHERE user_login = 'dotsunited';
-	EOF
-	)
-
-	if [ "$user_exists" -eq "1" ]; then
-		mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s <<-EOF
-		UPDATE ${WORDPRESS_TABLE_PREFIX}users SET user_pass = '\$P\$BjclDNhNxwUtHZNXByFaADVWzR7Bg21' WHERE user_login = 'dotsunited';
-		EOF
-	else
-		mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s <<-EOF
-		INSERT INTO ${WORDPRESS_TABLE_PREFIX}users (ID, user_login, user_pass, user_nicename, user_email, user_status, display_name) VALUES (99999, 'dotsunited', '\$P\$BjclDNhNxwUtHZNXByFaADVWzR7Bg21', 'dotsunited', 'info@dotsunited.de', 0, 'dotsunited');
+		INSERT INTO ${WORDPRESS_TABLE_PREFIX}users (user_login, user_pass, user_nicename, user_email, user_status, display_name) VALUES ('dev', '\$P\$BjclDNhNxwUtHZNXByFaADVWzR7Bg21', 'development-account', 'dev@local.com', 0, 'Developement-Account');
 		INSERT INTO ${WORDPRESS_TABLE_PREFIX}usermeta (user_id, meta_key, meta_value) VALUES (99999, 'wp_capabilities', 'a:1:{s:13:"administrator";b:1;}');
 		INSERT INTO ${WORDPRESS_TABLE_PREFIX}usermeta (user_id, meta_key, meta_value) VALUES (99999, 'wp_user_level', 10);
-		EOF
-	fi
+	EOF
 }
 
 if [ "$WORDPRESS_MULTISITE" -eq "1" ]; then
 	# Initialize WordPress multisite database.
-	set_wordpress_admin_user
+	create_wordpress_admin_user
 
 	mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s <<-EOF
 	UPDATE ${WORDPRESS_TABLE_PREFIX}blogs SET domain = '${WORDPRESS_HOST}:${WORDPRESS_PORT}';
@@ -66,7 +54,7 @@ if [ "$WORDPRESS_MULTISITE" -eq "1" ]; then
 	done < <(mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s -e "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME REGEXP '^${WORDPRESS_TABLE_PREFIX}(?:[0-9]+_)?options$'")
 else
 	# Initialize WordPress basic database.
-	set_wordpress_admin_user
+	create_wordpress_admin_user
 
 	mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -s <<-EOF
 	UPDATE ${WORDPRESS_TABLE_PREFIX}options SET option_value = 'http://${WORDPRESS_HOST}:${WORDPRESS_PORT}' WHERE option_name = 'siteurl';

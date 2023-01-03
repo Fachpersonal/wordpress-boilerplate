@@ -21,11 +21,19 @@ Features
 
 Setup
 ---
+
 Create new project with
 
 ```bash
 composer create-project dotsunited/wordpress-boilerplate my-project
 ```
+
+Wordpress Login
+---
+
+user : `dev`
+
+password : `123`
 
 Plugins
 ---
